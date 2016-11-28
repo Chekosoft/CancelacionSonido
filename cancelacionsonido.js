@@ -42515,13 +42515,11 @@ var MainControls = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (MainControls.__proto__ || Object.getPrototypeOf(MainControls)).call(this));
 
     _this.state = {
-      frequency: 20,
+      frequency: 5,
       distance: 0.2,
       volume: 0.6,
       enabled: false,
-      sound: true,
-      waveform: true,
-      soundsim: true,
+      simulate: true,
       leftwave: true,
       rightwave: true,
       resultwave: false
@@ -42538,7 +42536,7 @@ var MainControls = function (_React$Component) {
         { className: 'columns' },
         _react2.default.createElement(
           'div',
-          { className: 'column is-8 is-offset-2' },
+          { className: 'column is-10 is-offset-1' },
           _react2.default.createElement(
             'div',
             { className: 'content' },
@@ -42569,14 +42567,18 @@ var MainControls = function (_React$Component) {
               'div',
               { className: 'column is-8' },
               _react2.default.createElement(_SoundGenerator2.default, { frequency: self.state.frequency,
-                enabled: self.state.sound && self.state.enabled,
-                simulate: self.state.soundsim,
-                distance: self.state.distance,
-                volume: self.state.volume
+                enabled: self.state.enabled && !self.state.simulate,
+                volume: self.state.volume,
+                leftwave: self.state.leftwave,
+                rightwave: self.state.rightwave
               }),
               _react2.default.createElement(_WaveVisualization2.default, { frequency: self.state.frequency,
-                enabled: self.state.enabled && self.state.waveform,
-                distance: self.state.distance })
+                enabled: self.state.enabled && self.state.simulate,
+                distance: self.state.distance,
+                leftwave: self.state.leftwave,
+                rightwave: self.state.rightwave,
+                resultwave: self.state.resultwave
+              })
             )
           )
         )
@@ -42642,22 +42644,29 @@ var Settings = function (_React$Component) {
     _this.setFrequency = _this.setFrequency.bind(_this);
     _this.setDistance = _this.setDistance.bind(_this);
     _this.setEnabled = _this.setEnabled.bind(_this);
-    _this.setWaveform = _this.setWaveform.bind(_this);
+    //this.setWaveform = this.setWaveform.bind(this);
     _this.setSound = _this.setSound.bind(_this);
-    _this.setSoundsim = _this.setSoundsim.bind(_this);
+    //this.setSoundsim = this.setSoundsim.bind(this);
     _this.setVolume = _this.setVolume.bind(_this);
+    _this.setLeftWave = _this.setLeftWave.bind(_this);
+    _this.setRightWave = _this.setRightWave.bind(_this);
+    _this.setResultWave = _this.setResultWave.bind(_this);
+    _this.setSimtype = _this.setSimtype.bind(_this);
+    _this.setSimulate = _this.setSimulate.bind(_this);
     return _this;
   }
 
   _createClass(Settings, [{
     key: 'setFrequency',
     value: function setFrequency(e) {
-      this.props.parent.setState({ frequency: e });
+      var parentState = this.props.parent.state;
+      var minFrequency = parentState.simulate ? 5 : 20;
+      this.props.parent.setState({ frequency: e.target.value || minFrequency });
     }
   }, {
     key: 'setDistance',
     value: function setDistance(e) {
-      this.props.parent.setState({ distance: e });
+      this.props.parent.setState({ distance: e.target.value || 0 });
     }
   }, {
     key: 'setEnabled',
@@ -42665,29 +42674,52 @@ var Settings = function (_React$Component) {
       this.props.parent.setState({ enabled: e });
     }
   }, {
-    key: 'setWaveform',
-    value: function setWaveform(e) {
-      this.props.parent.setState({ waveform: e });
-    }
-  }, {
     key: 'setSound',
     value: function setSound(e) {
       this.props.parent.setState({ sound: e });
     }
   }, {
-    key: 'setSoundsim',
-    value: function setSoundsim(e) {
-      this.props.parent.setState({ soundsim: e });
+    key: 'setSimtype',
+    value: function setSimtype(e) {
+      this.props.parent.setState({ soundsim: e ? 'visual' : 'aural' });
     }
   }, {
     key: 'setVolume',
     value: function setVolume(e) {
-      this.props.parent.setState({ volume: e / 100 });
+      this.props.parent.setState({ volume: e.target.value / 100 });
+    }
+  }, {
+    key: 'setRightWave',
+    value: function setRightWave(e) {
+      this.props.parent.setState({ rightwave: e });
+    }
+  }, {
+    key: 'setLeftWave',
+    value: function setLeftWave(e) {
+      this.props.parent.setState({ leftwave: e });
+    }
+  }, {
+    key: 'setResultWave',
+    value: function setResultWave(e) {
+      this.props.parent.setState({ resultwave: e });
+    }
+  }, {
+    key: 'setSimulate',
+    value: function setSimulate(e) {
+      this.props.parent.setState({
+        simulate: e,
+        frequency: e ? 5 : 20
+      });
     }
   }, {
     key: 'render',
     value: function render() {
       var parentState = this.props.parent.state;
+
+      var maxFrequency = parentState.simulate ? 100 : 10000;
+      var minFrequency = parentState.simulate ? 5 : 20;
+      var minDistance = 0;
+      var maxDistance = 40;
 
       return _react2.default.createElement(
         'div',
@@ -42698,7 +42730,7 @@ var Settings = function (_React$Component) {
           _react2.default.createElement(
             'strong',
             null,
-            'Iniciar simulaci\xF3n ',
+            'Iniciar Sistema ',
             _react2.default.createElement(_rcSwitch2.default, { className: 'is-pulled-right', defaultChecked: parentState.enabled, onChange: this.setEnabled })
           )
         ),
@@ -42708,10 +42740,11 @@ var Settings = function (_React$Component) {
           _react2.default.createElement(
             'strong',
             null,
-            'Mostrar onda simulada ',
+            'Simulacion visual: ',
             _react2.default.createElement(_rcSwitch2.default, { className: 'is-pulled-right',
-              defaultChecked: parentState.waveform,
-              onChange: this.setWaveform })
+              defaultChecked: parentState.simulate,
+              onChange: this.setSimulate
+            })
           )
         ),
         _react2.default.createElement(
@@ -42720,10 +42753,10 @@ var Settings = function (_React$Component) {
           _react2.default.createElement(
             'strong',
             null,
-            'Generar sonido ',
+            'Fuente Izquierda: ',
             _react2.default.createElement(_rcSwitch2.default, { className: 'is-pulled-right',
-              defaultChecked: parentState.sound,
-              onChange: this.setSound })
+              defaultChecked: parentState.leftwave,
+              onChange: this.setLeftWave })
           )
         ),
         _react2.default.createElement(
@@ -42732,10 +42765,10 @@ var Settings = function (_React$Component) {
           _react2.default.createElement(
             'strong',
             null,
-            'Simular sonido ',
+            'Fuente Derecha: ',
             _react2.default.createElement(_rcSwitch2.default, { className: 'is-pulled-right',
-              defaultChecked: parentState.soundsim,
-              onChange: this.setSoundsim })
+              defaultChecked: parentState.rightwave,
+              onChange: this.setRightWave })
           )
         ),
         _react2.default.createElement(
@@ -42744,18 +42777,23 @@ var Settings = function (_React$Component) {
           _react2.default.createElement(
             'strong',
             null,
-            'Volumen (actual: ',
-            Math.round(parentState.volume * 100),
-            ' %)'
+            'Visualizar Onda Resultante: ',
+            _react2.default.createElement(_rcSwitch2.default, { className: 'is-pulled-right',
+              defaultChecked: parentState.resultwave,
+              onChange: this.setResultWave })
           )
         ),
-        _react2.default.createElement('p', null),
-        _react2.default.createElement(_rcSlider2.default, { min: 0, max: 100, step: 1,
-          tipFormatter: function tipFormatter(e) {
-            return Math.round(e) + "%";
-          },
-          onAfterChange: this.setVolume,
-          defaultValue: parentState.volume * 100 }),
+        _react2.default.createElement(
+          'p',
+          null,
+          _react2.default.createElement(
+            'strong',
+            null,
+            'Frecuencia de onda ([Hz])'
+          ),
+          _react2.default.createElement('input', { className: 'input', type: 'number', min: minFrequency, max: maxFrequency,
+            step: 1, value: parentState.frequency, onChange: this.setFrequency })
+        ),
         _react2.default.createElement('p', null),
         _react2.default.createElement(
           'p',
@@ -42763,18 +42801,11 @@ var Settings = function (_React$Component) {
           _react2.default.createElement(
             'strong',
             null,
-            'Frecuencia de onda (actual: ',
-            parentState.frequency,
-            ' [Hz])'
+            'Volumen (%)',
+            _react2.default.createElement('input', { className: 'input', type: 'number', min: 0, max: 100, value: parentState.volume * 100,
+              disabled: parentState.simulate, onChange: this.setVolume })
           )
         ),
-        _react2.default.createElement('p', null),
-        _react2.default.createElement(_rcSlider2.default, { min: 20, max: 1000, step: 1,
-          tipFormatter: function tipFormatter(e) {
-            return e + " [Hz]";
-          },
-          onAfterChange: this.setFrequency,
-          defaultValue: parentState.frequency }),
         _react2.default.createElement('p', null),
         _react2.default.createElement(
           'p',
@@ -42782,17 +42813,12 @@ var Settings = function (_React$Component) {
           _react2.default.createElement(
             'strong',
             null,
-            'Distancia entre fuentes (actual: ',
-            parentState.distance,
-            ' [m])'
-          )
-        ),
-        _react2.default.createElement(_rcSlider2.default, { min: 0, max: 1, step: 0.001,
-          tipFormatter: function tipFormatter(e) {
-            return e + " [m]";
-          },
-          onAfterChange: this.setDistance,
-          defaultValue: parentState.distance })
+            'Distancia entre fuentes [m]'
+          ),
+          _react2.default.createElement('input', { className: 'input', type: 'number', min: minDistance, max: maxDistance, step: 0.001,
+            onChange: this.setDistance, value: parentState.distance,
+            disabled: !parentState.simulate })
+        )
       );
     }
   }]);
@@ -42840,9 +42866,9 @@ var SoundGenerator = function (_React$Component) {
       return {
         enabled: _react.PropTypes.bool.isRequired,
         frequency: _react.PropTypes.number.isRequired,
-        distance: _react.PropTypes.number.isRequired,
-        simulate: _react.PropTypes.bool.isRequired,
-        volume: _react.PropTypes.number.isRequired
+        volume: _react.PropTypes.number.isRequired,
+        leftwave: _react.PropTypes.bool.isRequired,
+        rightwave: _react.PropTypes.bool.isRequired
       };
     }
   }]);
@@ -42875,15 +42901,24 @@ var SoundGenerator = function (_React$Component) {
       var _props = this.props,
           frequency = _props.frequency,
           distance = _props.distance,
-          volume = _props.volume;
+          volume = _props.volume,
+          leftwave = _props.leftwave,
+          rightwave = _props.rightwave;
 
 
       return function (e) {
         var out = e.buffers;
         var phaseIncr = frequency / _browser2.default.sampleRate;
-        for (var i = 0; i < e.bufferSize; i++) {
-          out[0][i] = volume * Math.sin(2 * Math.PI * phase);
-          out[1][i] = volume * Math.sin(2 * Math.PI * phase);
+        var bufferSize = e.bufferSize;
+
+
+        for (var i = 0; i < bufferSize; i++) {
+          if (leftwave) {
+            out[0][i] = volume * Math.cos(2 * Math.PI * phase);
+          }
+          if (rightwave) {
+            out[1][i] = volume * Math.cos(2 * Math.PI * phase);
+          }
           phase += phaseIncr;
         }
       }.bind(this);
@@ -42935,7 +42970,10 @@ var WaveVisualization = function (_React$Component) {
         enabled: _react.PropTypes.bool.isRequired,
         frequency: _react.PropTypes.number.isRequired,
         distance: _react.PropTypes.number.isRequired,
-        volume: _react.PropTypes.number.isRequired
+        //volume: PropTypes.number.isRequired,
+        leftwave: _react.PropTypes.bool.isRequired,
+        rightwave: _react.PropTypes.bool.isRequired,
+        resultwave: _react.PropTypes.bool.isRequired
       };
     }
   }]);
@@ -42966,40 +43004,89 @@ var WaveVisualization = function (_React$Component) {
         this.view.remove();
       }
       _paper2.default.setup(this.canvas);
+      var _props = this.props,
+          distance = _props.distance,
+          leftwave = _props.leftwave,
+          rightwave = _props.rightwave,
+          resultwave = _props.resultwave,
+          frequency = _props.frequency;
+
       if (!this.props.enabled) {
+        return;
+      }
+      if (!leftwave && !rightwave && !resultwave) {
         return;
       }
 
       var view = this.view = _paper2.default.view;
-      var _props = this.props,
-          frequency = _props.frequency,
-          distance = _props.distance;
-
       var amplitude = view.size.height / 4;
       var points = 1000;
 
-      var path = new _paper2.default.Path();
-      path.strokeColor = '#000';
-      path.strokeCap = 'square';
-      path.strokeSize = 3;
-
-      for (var i = Math.round(distance / 2); i < points; i++) {
-        var x = i / points * view.size.width;
-        var y = view.size.height / 2;
-        path.add(new _paper2.default.Point(x, y));
+      var paths = {};
+      if (leftwave) {
+        paths.left = new _paper2.default.Path();
+        paths.left.strokeCap = 'square';
+        paths.left.strokeColor = '#FF0000';
+        paths.left.strokeSize = 3;
       }
 
-      var kConst = 2 * Math.PI * (frequency / 343.21);
+      if (rightwave) {
+        paths.right = new _paper2.default.Path();
+        paths.right.strokeCap = 'square';
+        paths.right.strokeColor = '#0000FF';
+        paths.right.strokeSize = 3;
+      }
+
+      if (resultwave) {
+        paths.result = new _paper2.default.Path();
+        paths.result.strokeCap = 'square';
+        paths.result.strokeColor = '#009900';
+        paths.result.strokeSize = 3;
+      }
+
+      for (var pathName in paths) {
+        console.log(pathName);
+        var path = paths[pathName];
+        for (var i = 0; i < points; i++) {
+          var x = i / points * view.size.width;
+          var y = view.size.height / 2;
+          path.add(new _paper2.default.Point(x, y));
+        }
+      }
+
+      var kConst = 2 * Math.PI * (frequency / 343.21) / 50;
+      var wConst = 2 * Math.PI * frequency / 50;
       var yBasePos = view.size.height / 2;
-      console.log(Math.asin(frequency / 343.21));
+      var waveLength = 343.21 / frequency;
+
+      var phase = 2 * Math.PI * distance / waveLength;
 
       view.onFrame = function (e) {
-        for (var _i = 0; _i < points; _i++) {
-          var segment = path.segments[_i];
-          segment.point.y = yBasePos + amplitude * Math.sin(kConst * segment.point.x - e.time);
+        var frame = e.count;
+        var second = e.count / 60;
+
+        if ('left' in paths) {
+          for (var _i = 0; _i < points; _i++) {
+            var segment = paths.left.segments[_i];
+            segment.point.y = yBasePos + amplitude * Math.cos(kConst * segment.point.x - wConst * second);
+          }
+        }
+        if ('right' in paths) {
+          for (var _i2 = 0; _i2 < points; _i2++) {
+            var _segment = paths.right.segments[_i2];
+            _segment.point.y = yBasePos + amplitude * Math.cos(kConst * _segment.point.x - wConst * second + phase);
+          }
+        }
+
+        if ('result' in paths) {
+          for (var _i3 = 0; _i3 < points; _i3++) {
+            var _segment2 = paths.result.segments[_i3];
+            var leftAmplitude = amplitude * Math.cos(kConst * _segment2.point.x - wConst * second);
+            var rightAmplitude = amplitude * Math.cos(kConst * _segment2.point.x - wConst * second + phase);
+            _segment2.point.y = yBasePos + leftAmplitude + rightAmplitude;
+          }
         }
       };
-
       view.draw();
     }
   }, {
