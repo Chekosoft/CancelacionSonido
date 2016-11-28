@@ -42543,7 +42543,7 @@ var MainControls = function (_React$Component) {
             _react2.default.createElement(
               'h1',
               null,
-              'Simulaci\xF3n cancelaci\xF3n de sonido'
+              'F\xEDsica General 3: Proyecto simulaci\xF3n cancelaci\xF3n de sonido'
             )
           ),
           _react2.default.createElement(
@@ -42659,13 +42659,23 @@ var Settings = function (_React$Component) {
   _createClass(Settings, [{
     key: 'setFrequency',
     value: function setFrequency(e) {
+      e.preventDefault();
       var parentState = this.props.parent.state;
+      var maxFrequency = parentState.simulate ? 100 : 10000;
       var minFrequency = parentState.simulate ? 5 : 20;
+      var newFrequency = e.target.value;
+      if (!e.target.value || newFrequency < minFrequency || newFrequency > maxFrequency) {
+        return;
+      }
       this.props.parent.setState({ frequency: e.target.value || minFrequency });
     }
   }, {
     key: 'setDistance',
     value: function setDistance(e) {
+      e.preventDefault();
+      if (!e.target.value) {
+        return;
+      }
       this.props.parent.setState({ distance: e.target.value || 0 });
     }
   }, {
@@ -42740,7 +42750,7 @@ var Settings = function (_React$Component) {
           _react2.default.createElement(
             'strong',
             null,
-            'Simulacion visual: ',
+            'Simulacion: ',
             _react2.default.createElement(_rcSwitch2.default, { className: 'is-pulled-right',
               defaultChecked: parentState.simulate,
               onChange: this.setSimulate
@@ -42792,21 +42802,8 @@ var Settings = function (_React$Component) {
             'Frecuencia de onda ([Hz])'
           ),
           _react2.default.createElement('input', { className: 'input', type: 'number', min: minFrequency, max: maxFrequency,
-            step: 1, value: parentState.frequency, onChange: this.setFrequency })
+            step: 1, onBlur: this.setFrequency, defaultValue: 20 })
         ),
-        _react2.default.createElement('p', null),
-        _react2.default.createElement(
-          'p',
-          null,
-          _react2.default.createElement(
-            'strong',
-            null,
-            'Volumen (%)',
-            _react2.default.createElement('input', { className: 'input', type: 'number', min: 0, max: 100, value: parentState.volume * 100,
-              disabled: parentState.simulate, onChange: this.setVolume })
-          )
-        ),
-        _react2.default.createElement('p', null),
         _react2.default.createElement(
           'p',
           null,
@@ -42816,8 +42813,19 @@ var Settings = function (_React$Component) {
             'Distancia entre fuentes [m]'
           ),
           _react2.default.createElement('input', { className: 'input', type: 'number', min: minDistance, max: maxDistance, step: 0.001,
-            onChange: this.setDistance, value: parentState.distance,
+            onBlur: this.setDistance, defaultValue: 0.2,
             disabled: !parentState.simulate })
+        ),
+        _react2.default.createElement(
+          'p',
+          null,
+          _react2.default.createElement(
+            'strong',
+            null,
+            'Volumen (%)',
+            _react2.default.createElement('input', { className: 'input', type: 'number', min: 0, max: 100, value: parentState.volume * 100,
+              disabled: parentState.simulate, onBlur: this.setVolume })
+          )
         )
       );
     }
@@ -42900,11 +42908,13 @@ var SoundGenerator = function (_React$Component) {
       var phase = 0;
       var _props = this.props,
           frequency = _props.frequency,
-          distance = _props.distance,
           volume = _props.volume,
           leftwave = _props.leftwave,
           rightwave = _props.rightwave;
 
+      if (!frequency || !volume) {
+        return;
+      }
 
       return function (e) {
         var out = e.buffers;
@@ -43011,55 +43021,218 @@ var WaveVisualization = function (_React$Component) {
           resultwave = _props.resultwave,
           frequency = _props.frequency;
 
+
+      var view = this.view = _paper2.default.view;
+      var _view$size = view.size,
+          width = _view$size.width,
+          height = _view$size.height;
+
+      var amplitude = (height - 100) / 4;
+      var points = 1000;
+
+      var airSpeed = 343.21;
+      var kConst = 2 * Math.PI * (frequency / airSpeed) / 50;
+      var wConst = 2 * Math.PI * frequency / 50;
+      var yBasePos = view.size.height / 2;
+      var waveLength = 343.21 / frequency;
+      var phase = 2 * Math.PI * distance / waveLength;
+
+      var yAxis = new _paper2.default.Path.Line({
+        from: [20, height / 2],
+        to: [width, height / 2],
+        strokeColor: "#000",
+        strokeSize: 5
+      });
+
+      var xAxis = new _paper2.default.Path.Line({
+        from: [20, 0],
+        to: [20, height],
+        strokeColor: "#000",
+        strokeSize: 5
+      });
+
+      var symbologyText = new _paper2.default.PointText({
+        point: [width - 200, 20],
+        content: 'Simbología:',
+        fillColor: '#000',
+        fontSize: 12,
+        fontFamily: 'Sans'
+      });
+
+      var leftWaveText = new _paper2.default.PointText({
+        point: [width - 200, 35],
+        content: 'Onda izquierda',
+        fillColor: '#FF0000',
+        fontWeight: 'bold',
+        fontSize: 12,
+        fontFamily: 'Sans'
+      });
+
+      var rightWaveText = new _paper2.default.PointText({
+        point: [width - 200, 50],
+        content: 'Onda derecha',
+        fillColor: '#0000FF',
+        fontWeight: 'bold',
+        fontSize: 12,
+        fontFamily: 'Sans'
+      });
+
+      var resultWaveText = new _paper2.default.PointText({
+        point: [width - 200, 65],
+        content: 'Onda interferida',
+        fillColor: '#009900',
+        fontWeight: 'bold',
+        fontSize: 12,
+        fontFamily: 'Sans'
+      });
+
+      var yAxisText = new _paper2.default.PointText({
+        point: [5, 15],
+        content: 'Y',
+        fillColor: '#000',
+        fontWeight: 'bold',
+        fontSize: 14,
+        fontFamily: 'Sans'
+      });
+
+      var xAxisText = new _paper2.default.PointText({
+        point: [width - 15, height / 2 + 20],
+        content: 'X',
+        fillColor: '#000',
+        fontWeight: 'bold',
+        fontSize: 14,
+        fontFamily: 'Sans'
+      });
+
+      new _paper2.default.Path.Line({
+        from: [20, height / 2 - 2 * amplitude],
+        to: [40, height / 2 - 2 * amplitude],
+        strokeColor: "#000",
+        strokeSize: 5
+      });
+
+      new _paper2.default.Path.Line({
+        from: [20, height / 2 - amplitude],
+        to: [40, height / 2 - amplitude],
+        strokeColor: "#000",
+        strokeSize: 5
+      });
+
+      new _paper2.default.Path.Line({
+        from: [20, height / 2 + amplitude],
+        to: [40, height / 2 + amplitude],
+        strokeColor: "#000",
+        strokeSize: 5
+      });
+
+      new _paper2.default.Path.Line({
+        from: [20, height / 2 + 2 * amplitude],
+        to: [42, height / 2 + 2 * amplitude],
+        strokeColor: "#000",
+        strokeSize: 5
+      });
+
+      new _paper2.default.PointText({
+        point: [42, height / 2 - 2 * amplitude],
+        content: '2A',
+        fillColor: '#000',
+        fontWeight: 'bold',
+        fontSize: 14,
+        fontFamily: 'Sans'
+      });
+
+      new _paper2.default.PointText({
+        point: [42, height / 2 - amplitude],
+        content: 'A',
+        fillColor: '#000',
+        fontWeight: 'bold',
+        fontSize: 14,
+        fontFamily: 'Sans'
+      });
+
+      new _paper2.default.PointText({
+        point: [42, height / 2 + amplitude],
+        content: '-A',
+        fillColor: '#000',
+        fontWeight: 'bold',
+        fontSize: 14,
+        fontFamily: 'Sans'
+      });
+
+      new _paper2.default.PointText({
+        point: [42, height / 2 + 2 * amplitude],
+        content: '-2A',
+        fillColor: '#000',
+        fontWeight: 'bold',
+        fontSize: 14,
+        fontFamily: 'Sans'
+      });
+
+      new _paper2.default.PointText({
+        point: [width - 200, 95],
+        content: '\u03BB: ' + waveLength.toFixed(3) + ' [m]',
+        fillColor: '#000000',
+        fontWeight: 'bold',
+        fontSize: 12,
+        fontFamily: 'Sans'
+      });
+
+      new _paper2.default.PointText({
+        point: [width - 200, 110],
+        content: '\u03BB/2: ' + (waveLength / 2).toFixed(3) + ' [m]',
+        fillColor: '#000000',
+        fontWeight: 'bold',
+        fontSize: 12,
+        fontFamily: 'Sans'
+      });
+
+      new _paper2.default.PointText({
+        point: [width - 200, 125],
+        content: 'vAire: ' + airSpeed + ' [m/s]',
+        fillColor: '#000000',
+        fontWeight: 'bold',
+        fontSize: 12,
+        fontFamily: 'Sans'
+      });
+
       if (!this.props.enabled) {
         return;
       }
+
       if (!leftwave && !rightwave && !resultwave) {
         return;
       }
-
-      var view = this.view = _paper2.default.view;
-      var amplitude = view.size.height / 4;
-      var points = 1000;
 
       var paths = {};
       if (leftwave) {
         paths.left = new _paper2.default.Path();
         paths.left.strokeCap = 'square';
         paths.left.strokeColor = '#FF0000';
-        paths.left.strokeSize = 3;
+        paths.left.strokeSize = 5;
       }
 
       if (rightwave) {
         paths.right = new _paper2.default.Path();
         paths.right.strokeCap = 'square';
         paths.right.strokeColor = '#0000FF';
-        paths.right.strokeSize = 3;
+        paths.right.strokeSize = 5;
       }
 
       if (resultwave) {
         paths.result = new _paper2.default.Path();
         paths.result.strokeCap = 'square';
         paths.result.strokeColor = '#009900';
-        paths.result.strokeSize = 3;
+        paths.result.strokeSize = 5;
       }
 
       for (var pathName in paths) {
-        console.log(pathName);
         var path = paths[pathName];
         for (var i = 0; i < points; i++) {
-          var x = i / points * view.size.width;
-          var y = view.size.height / 2;
+          var x = 20 + i / points * (width - 20);
+          var y = height / 2;
           path.add(new _paper2.default.Point(x, y));
         }
       }
-
-      var kConst = 2 * Math.PI * (frequency / 343.21) / 50;
-      var wConst = 2 * Math.PI * frequency / 50;
-      var yBasePos = view.size.height / 2;
-      var waveLength = 343.21 / frequency;
-
-      var phase = 2 * Math.PI * distance / waveLength;
 
       view.onFrame = function (e) {
         var frame = e.count;
